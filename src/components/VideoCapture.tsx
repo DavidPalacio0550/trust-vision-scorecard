@@ -1,11 +1,12 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { VideoCapture as VideoCaptureUtil } from '@/utils/videoCapture';
 import { emotionAnalyzer, EmotionData } from '@/utils/emotionAnalysis';
+import { downloadFramesAsZip, downloadIndividualFrames } from '@/utils/fileDownload';
 import { useToast } from '@/hooks/use-toast';
+import { Download, FolderDown } from 'lucide-react';
 
 interface VideoRecordingProps {
   onAnalysisComplete: (result: {
@@ -166,6 +167,55 @@ const VideoRecording: React.FC<VideoRecordingProps> = ({ onAnalysisComplete }) =
     return translations[emotion] || emotion;
   };
 
+  const handleDownloadAsZip = async () => {
+    if (capturedFrames.length === 0) {
+      toast({
+        title: "Sin capturas",
+        description: "No hay capturas para descargar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const currentUser = authService.getCurrentUser();
+      const userName = currentUser?.name || currentUser?.email?.split('@')[0] || 'usuario';
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const folderName = `capturas_${userName}_${timestamp}`;
+      
+      await downloadFramesAsZip(capturedFrames, folderName);
+      
+      toast({
+        title: "Descarga completada",
+        description: `Capturas guardadas en ${folderName}.zip`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error de descarga",
+        description: "No se pudieron descargar las capturas",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadIndividual = () => {
+    if (capturedFrames.length === 0) {
+      toast({
+        title: "Sin capturas",
+        description: "No hay capturas para descargar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    downloadIndividualFrames(capturedFrames);
+    
+    toast({
+      title: "Descarga iniciada",
+      description: "Las capturas se están descargando individualmente",
+    });
+  };
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -214,7 +264,7 @@ const VideoRecording: React.FC<VideoRecordingProps> = ({ onAnalysisComplete }) =
           </div>
         )}
 
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <Button
             onClick={startRecording}
             disabled={isRecording}
@@ -223,11 +273,36 @@ const VideoRecording: React.FC<VideoRecordingProps> = ({ onAnalysisComplete }) =
           >
             {isRecording ? 'Grabando... (15s)' : 'Iniciar Análisis'}
           </Button>
+
+          {capturedFrames.length > 0 && !isRecording && (
+            <div className="flex gap-4 justify-center">
+              <Button
+                onClick={handleDownloadAsZip}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <FolderDown className="w-4 h-4" />
+                Descargar como ZIP
+              </Button>
+              
+              <Button
+                onClick={handleDownloadIndividual}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Descargar Individual
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="text-sm text-muted-foreground text-center space-y-1">
           <p>• La grabación durará exactamente 15 segundos</p>
           <p>• Se capturará 1 frame por segundo para análisis</p>
+          <p>• Las capturas se guardarán con el nombre del usuario</p>
           <p>• Mantén una expresión natural durante la grabación</p>
         </div>
       </CardContent>
