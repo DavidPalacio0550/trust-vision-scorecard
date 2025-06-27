@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { VideoCapture as VideoCaptureUtil } from '@/utils/videoCapture';
 import { emotionAnalyzer, EmotionData } from '@/utils/emotionAnalysis';
 import { downloadFramesAsZip, downloadIndividualFrames } from '@/utils/fileDownload';
+import { authService } from '@/utils/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Download, FolderDown } from 'lucide-react';
 
